@@ -1,0 +1,10 @@
+# Ignore everything by default...
+/*
+# ...then allow only portable config
+!/.gitignore
+!/CLAUDE.md
+!/settings.json
+!/skills/
+!/agents/
+!/commands/
+!/hooks/
