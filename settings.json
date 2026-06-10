@@ -2,7 +2,7 @@
   "model": "opus",
   "statusLine": {
     "type": "command",
-    "command": "~/bin/claude_statusline.sh"
+    "command": "./claude_statusline.sh"
   },
   "enabledPlugins": {
     "context7@claude-plugins-official": true,
