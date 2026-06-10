@@ -2,11 +2,12 @@
   "model": "opus",
   "statusLine": {
     "type": "command",
-    "command": "./claude_statusline.sh"
+    "command": "~/.claude/claude_statusline.sh"
   },
   "enabledPlugins": {
     "context7@claude-plugins-official": true,
-    "code-simplifier@claude-plugins-official": true
+    "code-simplifier@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true
   },
   "effortLevel": "high",
   "inputNeededNotifEnabled": true
