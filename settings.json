@@ -10,5 +10,19 @@
     "playwright@claude-plugins-official": true
   },
   "effortLevel": "high",
-  "inputNeededNotifEnabled": true
+  "inputNeededNotifEnabled": true,
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/padeler/.claude/hooks/log-bash-command.sh",
+            "statusMessage": "Logging command to /tmp/claude.log"
+          }
+        ]
+      }
+    ]
+  }
 }
