@@ -12,6 +12,10 @@
 - Implement features with minimal code. Do not overengineer.
 - If the codebase you are working on is poorly coded, don't follow bad examples and anti-patterns. Your additions should always be high quality, clean code.
 
+## Git Workflow
+- Every feature or bug fix gets its own branch; do not commit directly to main.
+- When merging a branch into main, squash its commits to keep the commit log clean.
+
 ## Running commands
 
 Bash command logging to `/tmp/claude.log` is automatic via a `PreToolUse` hook
