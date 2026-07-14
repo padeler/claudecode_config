@@ -4,7 +4,7 @@
 - Avoid adding silent fallback logic; fail explicitly and throw clear exceptions.
 - Prioritize strict typing and explicit return types.
 - Keep diffs as minimal and surgically precise as possible—do not rewrite entire files for a minor change.
-- always add logging and clear logs
+- always add logging and create informative logs
 
 ## Style & Convention
 - Write all code comments and documentation in English.
@@ -15,6 +15,11 @@
 ## Git Workflow
 - Every feature or bug fix gets its own branch; do not commit directly to main.
 - When merging a branch into main, squash its commits to keep the commit log clean.
+
+## Features/Bugs/Issues workflow
+- If gh (github cli) is available and the project repo is on github, use gh to log progress (issues)
+- Otherwise write a PLAN.md (large changes, big features, long tasks) or a TODOs.md (bug fixes, smaller features) 
+- Unless otherwise stated, wait for user confirmation after creating issues/plans/todos and before starting the implementation
 
 ## Running commands
 

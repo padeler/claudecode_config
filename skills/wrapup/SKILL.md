@@ -34,8 +34,17 @@ in sync with the code. Make only the changes the session's work actually warrant
 4. **Do not fabricate.** If something is unclear or you cannot verify it from the
    code, leave it alone and flag it rather than guessing.
 
-5. **Report.** Give a concise summary of:
+5. **Trim `CLAUDE.md`.** Over multiple wrapup calls the file tends to expand. 
+   CLAUDE.md should inform the agent about:
+   - the purpose of the project
+   - the tech stack
+   - a quick overview of the code base
+   - the main modules (i.e folder organization)
+   - pointers to further information (code files, other docs, git logs, etc)
+
+6. **Report.** Give a concise summary of:
    - Which docs you updated and why.
    - Anything you noticed that looks stale but you were unsure about (so the user
      can decide).
    - Confirm if no documentation changes were needed.
+
