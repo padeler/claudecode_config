@@ -1,35 +1,36 @@
 # Global Instructions
 
 ## Core Principles
-- Avoid adding silent fallback logic; fail explicitly and throw clear exceptions.
-- Prioritize strict typing and explicit return types.
-- Keep diffs as minimal and surgically precise as possible—do not rewrite entire files for a minor change.
-- always add logging and create informative logs
 
-## Style & Convention
-- Write all code comments and documentation in English.
-- Prefer functional programming principles (immutability, pure functions) unless an OOP wrapper is strictly required.
-- Implement features with minimal code. Do not overengineer.
-- If the codebase you are working on is poorly coded, don't follow bad examples and anti-patterns. Your additions should always be high quality, clean code.
+- Be laconic in prose — docs, reports, and interaction.
+- Clean, readable, maintainable code is preferred over short code.
+- Minimal scope: implement what was asked, no overengineering.
+- No silent fallbacks; fail explicitly with clear exceptions.
+- Strict typing, explicit return types.
+- Minimal, surgical diffs — never rewrite a file for a small change.
+- Always add informative logging.
 
-## Git Workflow
-- Every feature or bug fix gets its own branch; do not commit directly to main.
-- When merging a branch into main, squash its commits to keep the commit log clean.
+## Style
 
-## Features/Bugs/Issues workflow
-- If gh (github cli) is available and the project repo is on github, use gh to log progress (issues)
-- Otherwise write a PLAN.md (large changes, big features, long tasks) or a TODOs.md (bug fixes, smaller features) 
-- Unless otherwise stated, wait for user confirmation after creating issues/plans/todos and before starting the implementation
+- English for all comments and documentation.
+- Prefer functional style (immutability, pure functions) unless an OOP wrapper is required.
+- In poorly written codebases, don't copy the anti-patterns — your additions stay clean.
+
+## Documentation
+
+- When unsure about a lib/tool, read the docs *for that version* — use context7 MCP or online sources.
+
+## Git
+
+- Branch per feature/fix; never commit to main. Squash on merge.
+- Wait for confirmation before committing, unless told otherwise.
+
+## Features/Bugs/Issues
+
+- Use `gh` for issues if available and the repo is on GitHub; otherwise PLAN.md (large work) or TODOs.md (small work).
+- Wait for confirmation after creating issues/plans/todos, before implementing.
 
 ## Running commands
 
-Bash command logging to `/tmp/claude.log` is automatic via a `PreToolUse` hook
-(`~/.claude/hooks/log-bash-command.sh`, registered in `~/.claude/settings.json`).
-The hook appends a timestamped header with the command, then streams the
-command's combined stdout/stderr through `tee -a /tmp/claude.log` so the output
-can be followed live with `tail -f /tmp/claude.log`. Do not add manual
-`tee`/redirects for this — the hook handles it (and skips any command that
-already references `/tmp/claude.log`).
-
-- The hook cannot know your intent, so when a command's purpose isn't obvious
-  from the command itself, state it in your message before running it.
+- A `PreToolUse` hook (`~/.claude/hooks/log-bash-command.sh`, registered in `~/.claude/settings.json`) logs every bash command and its combined output to `/tmp/claude.log` (follow live with `tail -f`). Never add manual `tee`/redirects for this.
+- The hook can't know intent — state a command's purpose in your message when it isn't obvious from the command itself.
