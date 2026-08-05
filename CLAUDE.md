@@ -27,7 +27,7 @@
 
 ## Features/Bugs/Issues
 
-- Use `gh` for issues if available and the repo is on GitHub; otherwise PLAN.md (large work) or TODOs.md (small work).
+- Use `gh` for issues if available and the repo is on GitHub; otherwise PLAN.md, IMPLEMENTATION.md (large work) or TODOs.md (small work).
 - Wait for confirmation after creating issues/plans/todos, before implementing.
 
 ## Running commands
