@@ -9,6 +9,9 @@ One dispatched worker per project at a time. Every invocation either **does
 nothing** (work is already in flight) or **dispatches exactly one worker**.
 Finishing an unfinished run always beats starting a new one.
 
+The dispatcher and the [scout](../scout/SKILL.md) share one mutex per project:
+if a scout scan is in flight, the dispatcher does not start, and vice versa.
+
 Designed to be called repeatedly — by the user or by `/loop`. Calling it twice
 in a row must not produce two workers.
 
@@ -22,34 +25,41 @@ Run it from the project directory. Every `.claude/dispatch/...` path below is
 relative to the `root:` it reports — resolve them against that, not against the
 shell's cwd. It creates `.claude/dispatch/runs/` if
 needed, adds `.claude/dispatch/` to `.git/info/exclude` (state stays local, the
-repo stays clean), and prints: `root`, `main_branch`, `lock`, one `run:` line
-per active run, any `orphan_branch:`, `current_branch:`, and `worktree:`.
+repo stays clean), and prints: `root`, `main_branch`, `lock` (the mutex shared
+with scout), one `run:` line per active run, a `peer: scout ...` line for any
+in-flight scout scan, any `orphan_branch:`, `current_branch:`, and `worktree:`.
 
 Also call `TaskList` — it shows agents dispatched from *this* session, which the
-files cannot know about.
+files cannot know about. A live *scout* agent there counts too.
 
 ## 1. Decide (in order — stop at the first match)
 
 | State | Action |
 |---|---|
-| `lock: HELD` | Another dispatcher is mid-decision. **Do nothing.** Report and exit. |
+| `lock: HELD` | A dispatcher or scout is mid-decision. **Do nothing.** Report and exit. |
+| `peer: scout FRESH` **or** `TaskList` shows a live scout agent | A scout scan is in flight. **Do nothing.** Report the area and its age; the next tick will find it finished. |
 | `run: FRESH` **or** `TaskList` shows a live dispatch agent | Work is in flight. **Do nothing.** Report which task and its age. |
 | `run: STALE` | Unfinished run — the worker died (token limit, crash, session end). **Resume it** (§2). Oldest first. |
 | `orphan_branch:` with no run record | Abandoned work from an earlier run. **Reconstruct a run record** from the branch's commits and resume it (§2). |
 | Nothing above | **Start a new task** (§3). |
 
 `worktree: dirty` on `main` with no active run means someone is working by hand
-— do nothing and say so. Never take the lock away from a `HELD` state or lower
-`DISPATCH_STALE_MINUTES` to force a dispatch; if the user wants that, they will
-say so.
+— do nothing and say so. `peer: scout STALE` means that scout agent died and is
+not running, so it does not block a dispatch. Never take the lock away from a
+`HELD` state or lower `DISPATCH_STALE_MINUTES` to force a dispatch; if the user
+wants that, they will say so.
 
 Take the lock before dispatching, release it once the Agent call returns:
 
 ```
-mkdir .claude/dispatch/lock && echo "dispatcher $(date -u +%FT%TZ)" > .claude/dispatch/lock/owner
+bash ~/.claude/lib/agent-mutex.sh acquire dispatcher   # non-zero exit = held, stop here
+bash ~/.claude/lib/agent-mutex.sh release dispatcher
 ```
 
-`mkdir` fails if it exists — that failure *is* the answer, do not `-p` it away.
+The lock is one `mkdir`, shared with scout. A non-zero exit *is* the answer — do
+not work around it. `acquire` reclaims a lock older than
+`AGENT_LOCK_STALE_MINUTES` (15) on its own, since the lock is only ever held
+across a single decision; a `lock: STALE` line means the holder's session died.
 
 ## 2. Resume an unfinished run
 
@@ -122,3 +132,7 @@ why nothing was), the run file, and the branch.
 Pick an interval matched to how long a task takes — 15–30 minutes is sane. Each
 tick is a cheap state check; the expensive work happens in the background
 worker. Do not shorten the interval to "check on" a running worker.
+
+Dispatcher and scout can share the same loop: the mutex makes them take turns
+rather than run together, so a tick that finds the other one busy is a no-op, not
+a failure.

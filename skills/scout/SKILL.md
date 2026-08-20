@@ -14,9 +14,11 @@ the project's tracker.
 GitHub issues if the repo is on GitHub with issues enabled, otherwise
 `TODOs.md`. Never both.
 
-The dispatcher skill is the consumer: what scout writes, dispatcher implements.
-So every item must be shaped for an autonomous worker — self-contained,
-evidence-backed, and unambiguous.
+The [dispatcher](../dispatcher/SKILL.md) skill is the consumer: what scout
+writes, dispatcher implements. So every item must be shaped for an autonomous
+worker — self-contained, evidence-backed, and unambiguous. The two share one
+mutex per project: if a dispatch worker is in flight, scout does not start, and
+vice versa.
 
 Designed to be called repeatedly — by the user or by `/loop`. Calling it twice in
 a row must not produce two scouts or two copies of the same finding.
@@ -31,34 +33,41 @@ Run it from the project directory. Every `.claude/scout/...` path below is
 relative to the `root:` it reports — resolve them against that, not against the
 shell's cwd. It creates `.claude/scout/scans/` if needed, adds `.claude/scout/`
 to `.git/info/exclude` (state stays local, the repo stays clean), and prints:
-`root`, `main_branch`, `lock`, one `scan:` line per active scan, one `covered:`
-line per focus area already scanned, `todos_file:`, `gh:`, `output:`,
-`backlog:`, `current_branch:` and `worktree:`.
+`root`, `main_branch`, `lock` (the mutex shared with the dispatcher), one `scan:`
+line per active scan, a `peer: dispatch ...` line for any in-flight dispatch run,
+one `covered:` line per focus area already scanned, `todos_file:`, `gh:`,
+`output:`, `backlog:`, `current_branch:` and `worktree:`.
 
 Also call `TaskList` — it shows agents dispatched from *this* session, which the
-files cannot know about.
+files cannot know about. A live *dispatch* worker there counts too.
 
 ## 1. Decide (in order — stop at the first match)
 
 | State | Action |
 |---|---|
-| `lock: HELD` | Another scout is mid-decision. **Do nothing.** Report and exit. |
+| `lock: HELD` | A scout or dispatcher is mid-decision. **Do nothing.** Report and exit. |
+| `peer: dispatch FRESH` **or** `TaskList` shows a live dispatch worker | A dispatch worker is in flight. **Do nothing.** Report the task and its age; the next tick will find it finished. |
 | `scan: FRESH` **or** `TaskList` shows a live scout agent | A scan is in flight. **Do nothing.** Report which area and its age. |
 | `scan: STALE` | The scout agent died. Set that record to `status: abandoned`, log why, and start a **new** scan of the same area (§2) — its findings were never written, so there is nothing to resume. |
 | `backlog: FULL` | The tracker named by `output:` already holds enough open work (`SCOUT_BACKLOG_MAX`, default 15). **Do nothing.** Report that the dispatcher should drain it first. |
 | Nothing above | **Start a new scan** (§2). |
 
-Scout state is independent of the dispatcher's: a running dispatch worker does
-*not* block a scan, and vice versa. They touch different things — the worker owns
-the code, scout owns the tracker.
+Only one agent per project, scout's or the dispatcher's, is ever in flight — even
+though they touch different things (the worker owns the code, scout owns the
+tracker). `peer: dispatch STALE` means that worker died and is not running, so it
+does not block a scan; the dispatcher will resume it on its own next tick.
 
 Take the lock before dispatching, release it once the Agent call returns:
 
 ```
-mkdir .claude/scout/lock && echo "scout $(date -u +%FT%TZ)" > .claude/scout/lock/owner
+bash ~/.claude/lib/agent-mutex.sh acquire scout   # non-zero exit = held, stop here
+bash ~/.claude/lib/agent-mutex.sh release scout
 ```
 
-`mkdir` fails if it exists — that failure *is* the answer, do not `-p` it away.
+The lock is one `mkdir`, shared with the dispatcher. A non-zero exit *is* the
+answer — do not work around it. `acquire` reclaims a lock older than
+`AGENT_LOCK_STALE_MINUTES` (15) on its own, since the lock is only ever held
+across a single decision; a `lock: STALE` line means the holder's session died.
 
 ## 2. Pick the focus area
 
@@ -143,5 +152,7 @@ why nothing was), the scan file, and the current backlog depth.
 ## Under /loop
 
 Scout and dispatcher pair well on the same loop cadence (15–30 minutes): scout
-tops the backlog up, dispatcher drains it. The backlog cap in §1 is what keeps
-them balanced — do not raise it to keep scout busy.
+tops the backlog up, dispatcher drains it. The mutex makes them take turns rather
+than run together, so a tick that finds the other one busy is a no-op, not a
+failure. The backlog cap in §1 is what keeps them balanced — do not raise it to
+keep scout busy.

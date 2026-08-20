@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Report dispatcher state for the current project: lock, active/stale runs,
-# orphan dispatch branches, worktree cleanliness.
+# Report dispatcher state for the current project: shared lock, active/stale
+# runs, any in-flight scout scan, orphan dispatch branches, worktree cleanliness.
 # Read-only except for creating the state dir and the git exclude entry.
 set -euo pipefail
 
 STALE_MINUTES="${DISPATCH_STALE_MINUTES:-45}"
+MUTEX="$HOME/.claude/lib/agent-mutex.sh"
 
 root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 dir="$root/.claude/dispatch"
@@ -36,11 +37,10 @@ echo "root: $root"
 echo "main_branch: $main_branch"
 echo "stale_after_minutes: $STALE_MINUTES"
 
-if [ -d "$dir/lock" ]; then
-  echo "lock: HELD owner=$(cat "$dir/lock/owner" 2>/dev/null || echo unknown)"
-else
-  echo "lock: free"
-fi
+# Lock and peer activity come from the mutex shared with the scout skill: only
+# one of the two may have an agent in flight per project.
+bash "$MUTEX" lock
+bash "$MUTEX" peer scout
 
 now="$(date -u +%s)"
 found=0

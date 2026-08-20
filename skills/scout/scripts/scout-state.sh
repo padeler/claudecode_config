@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-# Report scout state for the current project: lock, active/stale scans, focus
-# areas already covered, current backlog size, worktree cleanliness.
+# Report scout state for the current project: shared lock, active/stale scans,
+# any in-flight dispatch run, focus areas already covered, current backlog size,
+# worktree cleanliness.
 # Read-only except for creating the state dir and the git exclude entry.
 set -euo pipefail
 
 STALE_MINUTES="${SCOUT_STALE_MINUTES:-45}"
 COOLDOWN_DAYS="${SCOUT_AREA_COOLDOWN_DAYS:-7}"
 BACKLOG_MAX="${SCOUT_BACKLOG_MAX:-15}"
+MUTEX="$HOME/.claude/lib/agent-mutex.sh"
 
 root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 dir="$root/.claude/scout"
@@ -42,11 +44,10 @@ echo "main_branch: $main_branch"
 echo "stale_after_minutes: $STALE_MINUTES"
 echo "area_cooldown_days: $COOLDOWN_DAYS"
 
-if [ -d "$dir/lock" ]; then
-  echo "lock: HELD owner=$(cat "$dir/lock/owner" 2>/dev/null || echo unknown)"
-else
-  echo "lock: free"
-fi
+# Lock and peer activity come from the mutex shared with the dispatcher skill:
+# only one of the two may have an agent in flight per project.
+bash "$MUTEX" lock
+bash "$MUTEX" peer dispatch
 
 now="$(date -u +%s)"
 active=0
