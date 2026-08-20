@@ -1,7 +1,7 @@
 # Scout prompt template
 
 Fill the `{{...}}` placeholders and pass the result as the `prompt` to the Agent
-tool (`subagent_type: general-purpose`, `run_in_background: true`).
+tool (`subagent_type: general-purpose`).
 
 ---
 

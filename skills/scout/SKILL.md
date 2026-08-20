@@ -38,16 +38,17 @@ line per active scan, a `peer: dispatch ...` line for any in-flight dispatch run
 one `covered:` line per focus area already scanned, `todos_file:`, `gh:`,
 `output:`, `backlog:`, `current_branch:` and `worktree:`.
 
-Also call `TaskList` — it shows agents dispatched from *this* session, which the
-files cannot know about. A live *dispatch* worker there counts too.
+Also call `ListAgents` — it lists live agents spawned by this session (and other
+local sessions), which the files cannot know about. A live *dispatch* worker
+there counts too.
 
 ## 1. Decide (in order — stop at the first match)
 
 | State | Action |
 |---|---|
 | `lock: HELD` | A scout or dispatcher is mid-decision. **Do nothing.** Report and exit. |
-| `peer: dispatch FRESH` **or** `TaskList` shows a live dispatch worker | A dispatch worker is in flight. **Do nothing.** Report the task and its age; the next tick will find it finished. |
-| `scan: FRESH` **or** `TaskList` shows a live scout agent | A scan is in flight. **Do nothing.** Report which area and its age. |
+| `peer: dispatch FRESH` **or** `ListAgents` shows a live dispatch worker | A dispatch worker is in flight. **Do nothing.** Report the task and its age; the next tick will find it finished. |
+| `scan: FRESH` **or** `ListAgents` shows a live scout agent | A scan is in flight. **Do nothing.** Report which area and its age. |
 | `scan: STALE` | The scout agent died. Set that record to `status: abandoned`, log why, and start a **new** scan of the same area (§2) — its findings were never written, so there is nothing to resume. |
 | `backlog: FULL` | The tracker named by `output:` already holds enough open work (`SCOUT_BACKLOG_MAX`, default 15). **Do nothing.** Report that the dispatcher should drain it first. |
 | Nothing above | **Start a new scan** (§2). |
@@ -126,8 +127,8 @@ Fill `references/scout-prompt.md` and pass it as the Agent prompt:
 - `{{OUTPUT}}` is the `output:` value from §0, verbatim — the agent must not
   re-decide where findings go.
 - `subagent_type: general-purpose`
-- `run_in_background: true` — scout must return immediately; the next invocation
-  sees the `FRESH` scan record and does nothing.
+- Subagents always run in the background, so scout returns immediately; the next
+  invocation sees the `FRESH` scan record and does nothing.
 - Fresh agent every time.
 
 Release the lock, then report in two or three lines: the area being scanned (or

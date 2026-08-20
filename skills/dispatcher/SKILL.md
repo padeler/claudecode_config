@@ -29,16 +29,17 @@ repo stays clean), and prints: `root`, `main_branch`, `lock` (the mutex shared
 with scout), one `run:` line per active run, a `peer: scout ...` line for any
 in-flight scout scan, any `orphan_branch:`, `current_branch:`, and `worktree:`.
 
-Also call `TaskList` — it shows agents dispatched from *this* session, which the
-files cannot know about. A live *scout* agent there counts too.
+Also call `ListAgents` — it lists live agents spawned by this session (and other
+local sessions), which the files cannot know about. A live *scout* agent there
+counts too.
 
 ## 1. Decide (in order — stop at the first match)
 
 | State | Action |
 |---|---|
 | `lock: HELD` | A dispatcher or scout is mid-decision. **Do nothing.** Report and exit. |
-| `peer: scout FRESH` **or** `TaskList` shows a live scout agent | A scout scan is in flight. **Do nothing.** Report the area and its age; the next tick will find it finished. |
-| `run: FRESH` **or** `TaskList` shows a live dispatch agent | Work is in flight. **Do nothing.** Report which task and its age. |
+| `peer: scout FRESH` **or** `ListAgents` shows a live scout agent | A scout scan is in flight. **Do nothing.** Report the area and its age; the next tick will find it finished. |
+| `run: FRESH` **or** `ListAgents` shows a live dispatch agent | Work is in flight. **Do nothing.** Report which task and its age. |
 | `run: STALE` | Unfinished run — the worker died (token limit, crash, session end). **Resume it** (§2). Oldest first. |
 | `orphan_branch:` with no run record | Abandoned work from an earlier run. **Reconstruct a run record** from the branch's commits and resume it (§2). |
 | Nothing above | **Start a new task** (§3). |
@@ -118,8 +119,8 @@ If the task is a GitHub issue, comment on it that it has been picked up.
 Fill `references/worker-prompt.md` and pass it as the Agent prompt:
 
 - `subagent_type: general-purpose`
-- `run_in_background: true` — the dispatcher must return immediately; the next
-  invocation sees the `FRESH` run record and does nothing.
+- Subagents always run in the background, so the dispatcher returns immediately;
+  the next invocation sees the `FRESH` run record and does nothing.
 - Fresh agent every time. Never `SendMessage` a dead worker back to life — a run
   that died on a token limit needs a clean context, which is exactly what the
   run record's log is for.
