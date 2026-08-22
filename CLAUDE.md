@@ -2,7 +2,6 @@
 
 ## Core Principles
 
-- Be laconic in prose — docs, reports, and interaction.
 - Clean, readable, maintainable code is preferred over short code.
 - Minimal scope: implement what was asked, no overengineering.
 - No silent fallbacks; fail explicitly with clear exceptions.
