@@ -2,6 +2,8 @@
 input=$(cat)
 
 MODEL=$(echo "$input" | jq -r '.model.display_name')
+MODEL_ID=$(echo "$input" | jq -r '.model.id')
+TRANSCRIPT=$(echo "$input" | jq -r '.transcript_path')
 DIR=$(echo "$input" | jq -r '.workspace.current_dir')
 COST=$(echo "$input" | jq -r '.cost.total_cost_usd // 0')
 PCT=$(echo "$input" | jq -r '.context_window.used_percentage // 0' | cut -d. -f1)
@@ -28,3 +30,6 @@ git rev-parse --git-dir > /dev/null 2>&1 && BRANCH=" | 🌿 $(git branch --show-
 COST_FMT=$(printf '$%.2f' "$COST")
 
 echo -e "${CYAN}[$MODEL | ${CTX_K}k]${RESET} 📁 ${DIR##*/}$BRANCH | ${BAR_COLOR}${BAR}${RESET} ${PCT}% | ${YELLOW}${COST_FMT}${RESET} | ⏱️ ${MINS}m ${SECS}s"
+
+# One extra line per subagent, showing its own context usage.
+~/.claude/claude_statusline_subagents.sh "$TRANSCRIPT" "$MODEL_ID" "$CTX_SIZE"
