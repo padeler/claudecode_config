@@ -18,6 +18,8 @@
 ## Documentation
 
 - When unsure about a lib/tool, read the docs *for that version* — use context7 MCP or online sources.
+- Markdown and comments: brief and precise, easy to parse fast.
+- In markdown, prefer bullet points over prose.
 
 ## Git
 
