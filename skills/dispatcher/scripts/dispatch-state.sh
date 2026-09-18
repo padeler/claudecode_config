@@ -52,16 +52,30 @@ for f in "$runs"/*.md; do
   updated="$(sed -n 's/^updated:[[:space:]]*//p' "$f" | head -1)"
   branch="$(sed -n 's/^branch:[[:space:]]*//p' "$f" | head -1)"
   task="$(sed -n 's/^task:[[:space:]]*//p' "$f" | head -1)"
-  ts="$(date -u -d "$updated" +%s 2>/dev/null || echo 0)"
+  # The heartbeat is the file's mtime, not the self-reported `updated:` field:
+  # a worker proves it is alive by writing the record, and the filesystem
+  # stamps that write. Workers that type a plausible time instead of running
+  # `date -u` used to drift hours ahead and read as STALE while still working.
+  ts="$(stat -c %Y "$f")"
   age=$(( (now - ts) / 60 ))
-  # Unparseable, in the future (clock skew / hand-edited), or simply old ->
-  # nobody is credibly heartbeating this run.
-  if [ "$ts" -eq 0 ] || [ "$age" -lt 0 ] || [ "$age" -ge "$STALE_MINUTES" ]; then
+  if [ "$age" -lt 0 ]; then
+    # Only reachable if the system clock moved backwards; the run was just
+    # touched, so treat it as alive rather than dispatching a second worker.
+    echo "warn: mtime is in the future (clock skew) file=$f age_min=$age"
+    age=0
+  fi
+  if [ "$age" -ge "$STALE_MINUTES" ]; then
     state=STALE
   else
     state=FRESH
   fi
   echo "run: $state age_min=$age file=$f branch=$branch task=$task"
+  # `updated:` is kept for humans reading the record; a large divergence means
+  # the worker is fabricating timestamps and its `## Log` times are unreliable.
+  claimed="$(date -u -d "$updated" +%s 2>/dev/null || echo 0)"
+  if [ "$claimed" -ne 0 ] && [ $(( (claimed - ts) / 60 )) -ge 5 ]; then
+    echo "warn: self-reported updated: is $(( (claimed - ts) / 60 ))min ahead of mtime file=$f"
+  fi
 done
 [ "$found" -eq 1 ] || echo "run: none active"
 

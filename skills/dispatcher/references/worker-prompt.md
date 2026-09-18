@@ -23,11 +23,19 @@ still applies.
 
 ## Heartbeat — do this or you will be killed as stale
 
-Rewrite the `updated:` field of `{{RUN_FILE}}` to the current UTC time
-(`date -u +%Y-%m-%dT%H:%M:%SZ`) and append a one-line entry under `## Log`
-**after every meaningful step** (branch created, design settled, file edited,
-tests run, committed, merged). The log is the only thing a resuming worker will
-have. Write down decisions and dead ends, not just successes.
+Write to `{{RUN_FILE}}` **after every meaningful step** (branch created, design
+settled, file edited, tests run, committed, merged): append a one-line entry
+under `## Log`, and refresh the `updated:` field. The write itself is the
+heartbeat — the dispatcher reads the file's modification time, not the
+timestamps inside it — so what keeps you alive is touching the file often, not
+getting the clock right.
+
+Both timestamps are for whoever reads the record later, so do not invent them:
+run `date -u +%Y-%m-%dT%H:%M:%SZ` and use its output. A fabricated time makes
+your log lie about the order things happened in.
+
+The log is the only thing a resuming worker will have. Write down decisions and
+dead ends, not just successes.
 
 ## Steps
 

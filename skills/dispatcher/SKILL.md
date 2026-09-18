@@ -40,9 +40,14 @@ counts too.
 | `lock: HELD` | A dispatcher or scout is mid-decision. **Do nothing.** Report and exit. |
 | `peer: scout FRESH` **or** `ListAgents` shows a live scout agent | A scout scan is in flight. **Do nothing.** Report the area and its age; the next tick will find it finished. |
 | `run: FRESH` **or** `ListAgents` shows a live dispatch agent | Work is in flight. **Do nothing.** Report which task and its age. |
-| `run: STALE` | Unfinished run — the worker died (token limit, crash, session end). **Resume it** (§2). Oldest first. |
+| `run: STALE` | Unfinished run — nothing has written the record for `DISPATCH_STALE_MINUTES`, so the worker died (token limit, crash, session end). **Resume it** (§2). Oldest first. |
 | `orphan_branch:` with no run record | Abandoned work from an earlier run. **Reconstruct a run record** from the branch's commits and resume it (§2). |
 | Nothing above | **Start a new task** (§3). |
+
+A `warn:` line about `updated:` running ahead of the file's mtime does not
+change any of the above — staleness is decided on mtime alone. It means that
+worker invented its timestamps, so read the times in its `## Log` as ordering
+hints, not facts.
 
 `worktree: dirty` on `main` with no active run means someone is working by hand
 — do nothing and say so. `peer: scout STALE` means that scout agent died and is
@@ -66,7 +71,8 @@ across a single decision; a `lock: STALE` line means the holder's session died.
 
 Read the run record in full. Its `## Log` is the previous worker's handoff.
 Dispatch with `MODE: RESUME`, the same `branch:` and `task:`, and set the
-record's `updated:` to now so the new worker owns the heartbeat.
+record's `updated:` to now — that write refreshes the file's mtime, which is the
+heartbeat the new worker now owns.
 
 If a run record has already been resumed twice and still stalls, set it to
 `status: failed`, log why, and report it to the user instead of resuming a third
