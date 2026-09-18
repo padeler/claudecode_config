@@ -31,7 +31,3 @@
 - Use `gh` for issues if available and the repo is on GitHub; otherwise PLAN.md, IMPLEMENTATION.md (large work) or TODOs.md (small work).
 - Wait for confirmation after creating issues/plans/todos, before implementing.
 
-## Running commands
-
-- A `PreToolUse` hook (`~/.claude/hooks/log-bash-command.sh`, registered in `~/.claude/settings.json`) logs every bash command and its combined output to `/tmp/claude.log` (follow live with `tail -f`). Never add manual `tee`/redirects for this.
-- The hook can't know intent — state a command's purpose in your message when it isn't obvious from the command itself.
