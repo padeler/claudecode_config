@@ -1,5 +1,10 @@
 # Global Instructions
 
+## Response Style
+
+- Keep answers brief and to the point.
+- Bullet points over prose.
+
 ## Core Principles
 
 - Clean, readable, maintainable code is preferred over short code.
@@ -7,9 +12,9 @@
 - No silent fallbacks; fail explicitly with clear exceptions.
 - Strict typing, explicit return types.
 - Minimal, surgical diffs — never rewrite a file for a small change.
-- Always add informative logging.
+- Log at meaningful boundaries (entry points, I/O, error paths); don't log trivial helpers.
 
-## Style
+## Code Style
 
 - English for all comments and documentation.
 - Prefer functional style (immutability, pure functions) unless an OOP wrapper is required.
@@ -19,11 +24,11 @@
 
 - When unsure about a lib/tool, read the docs *for that version* — use context7 MCP or online sources.
 - Markdown and comments: brief and precise, easy to parse fast.
-- In markdown, prefer bullet points over prose.
+- In markdown files, prefer bullet points over prose.
 
 ## Git
 
-- Branch per feature/fix; never commit to main. Squash on merge.
+- Branch per feature/fix; no direct commits on main (merges are fine). Squash on merge.
 - Wait for confirmation before committing, unless told otherwise.
 
 ## Features/Bugs/Issues
