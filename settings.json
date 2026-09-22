@@ -6,14 +6,16 @@
   },
   "enabledPlugins": {
     "context7@claude-plugins-official": true,
-    "code-simplifier@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": false,
     "playwright@claude-plugins-official": true
   },
   "effortLevel": "high",
-  "inputNeededNotifEnabled": true,
   "modelSettings": {
     "claude-opus-5": {
-      "effortLevel": "medium"
+      "effortLevel": "high"
     }
-  }
+  },
+  "skipDangerousModePermissionPrompt": true,
+  "inputNeededNotifEnabled": true,
+  "awaySummaryEnabled": false
 }

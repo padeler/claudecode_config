@@ -89,6 +89,12 @@ dead ends, not just successes.
 
 ## Hard rules
 
+- **Reap your background work before you hand back.** A long run that cannot fit
+  a foreground call (the test suite) is backgrounded, and a background job still
+  reporting after you finish re-invokes you, so the dispatcher gets the same
+  completion notification again for an agent that has nothing left to do. Before
+  your final report, wait for every job you started to report, or stop the ones
+  whose output you no longer need.
 - One task per run. Do not pick up extra work you notice — file a GitHub issue
   (or add a `TODOs.md` entry) for it and move on.
 - Never force-push, never rewrite `{{MAIN_BRANCH}}` history, never delete
