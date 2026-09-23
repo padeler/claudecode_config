@@ -51,17 +51,13 @@ context_window_for() {
     esac
 }
 
-# Trim the model id down to what distinguishes it, for a narrow status line.
+# Trim the model id down to what distinguishes it, for a narrow status line:
+# drop the "claude-" prefix, a "[1m]"-style suffix and a date stamp, and render
+# the version as major.minor (claude-opus-5-5 -> opus-5.5).
 short_model_name() {
-    local model=$1
-    case "$model" in
-        *haiku-4-5*)  echo "haiku-4.5" ;;
-        *opus-5*)     echo "opus-5" ;;
-        *sonnet-5*)   echo "sonnet-5" ;;
-        *fable-5*)    echo "fable-5" ;;
-        *mythos-5*)   echo "mythos-5" ;;
-        *)            echo "${model#claude-}" ;;
-    esac
+    local model=${1#claude-}
+    model=${model%%\[*}
+    sed -E 's/-[0-9]{8}$//; s/-([0-9]+)-([0-9]+)$/-\1.\2/' <<<"$model"
 }
 
 format_tokens() {
