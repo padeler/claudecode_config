@@ -56,7 +56,7 @@ dead ends and conflict resolutions, not just successes.
      `gh issue view {{ISSUE}} --json title,body,comments` (`--comments` alone
      omits the body). Then `CLAUDE.md`, `README.md` (if present), and any docs
      the issue points at.
-   - Project docs may lag main by a few merges (a docs agent updates them in
+   - Project docs may lag main by a few merges (the dispatcher updates them in
      batches). If a documented command fails, check the `docs:` notes of the
      recent completed records in `{{ROOT}}/.claude/dispatch/runs/` and
      `git log origin/{{MAIN_BRANCH}}` before concluding something is broken.
@@ -101,7 +101,7 @@ dead ends and conflict resolutions, not just successes.
    - Documentation: update only what is part of the change itself (docstrings,
      `--help` text, a doc the task explicitly targets). Do **not** edit
      `CLAUDE.md`, `README.md` or other project-level docs, and do not run the
-     `wrapup` skill — a separate docs agent handles those.
+     `wrapup` skill — the dispatcher handles those.
    - Use the slot number for anything that must not collide with other
      workers: ports (`base + {{SLOT}}`), database names, temp dirs.
    - Reference the issue in the commit message (`… (#{{ISSUE}})`). Never add
