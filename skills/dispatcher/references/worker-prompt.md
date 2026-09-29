@@ -72,7 +72,7 @@ dead ends, not just successes.
    ```
    git checkout {{MAIN_BRANCH}} && git pull --ff-only
    git merge --squash {{BRANCH}}
-   git commit          # one clear message summarizing the task
+   git commit -m "<summary>"   # one clear message; append " (#<n>)" for an issue, never "closes/fixes #<n>"
    git push
    git branch -D {{BRANCH}}
    ```
@@ -80,7 +80,10 @@ dead ends, not just successes.
    checks, and push again. If it still fails, stop with `status: blocked`.
 
 7. **Update the tracker.** If the task came from a GitHub issue, close it with a
-   comment linking the merge commit (`gh issue close <n> --comment ...`). If it
+   comment linking the merge commit (`gh issue close <n> --comment ...`). Do not
+   use GitHub closing keywords (`closes`/`fixes #<n>`) in the commit message: the
+   push would close the issue first and `gh issue close` would then fail without
+   posting the comment. If it
    came from a markdown file (`TODOs.md`, `PLAN.md`, `IMPLEMENTATION.md`), tick
    or remove the entry and include that in the same commit as the work.
 

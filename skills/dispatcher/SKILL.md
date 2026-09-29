@@ -82,7 +82,7 @@ time.
 
 Look, in this order:
 
-1. `gh issue list --state open --assignee "" --json number,title,labels,body`
+1. `gh issue list --state open --search "no:assignee" --json number,title,labels,body`
    (skip if `gh` is unavailable or the repo is not on GitHub). Prefer issues
    labelled `ready`/`good first issue`; skip `blocked`, `needs-discussion`, and
    anything already assigned.
