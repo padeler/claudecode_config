@@ -10,7 +10,9 @@
 # Only running agents are listed; a finished one disappears on the next refresh.
 # Completion is read from the agent's own transcript: its last non-null
 # stop_reason is "tool_use" while the agent loop is turning and "end_turn" once
-# it answers. Completion is deliberately not read from the parent transcript —
+# it answers. Newer CLIs (2.1.288+) finish with a SubagentHandback tool call
+# instead, so that call also marks the agent finished. Completion is
+# deliberately not read from the parent transcript —
 # a background agent's tool_result is written at launch, not at finish.
 #
 # Usage: claude_statusline_subagents.sh <transcript_path> <main_model_id> <main_window_size>
@@ -100,6 +102,13 @@ for meta in "$SUBAGENT_DIR"/agent-*.meta.json; do
 
     idle=$((now - $(stat -c %Y "$jsonl")))
     [ "$idle" -le "$STALE_AFTER_SECONDS" ] || continue
+
+    # A finished agent hands its report back through a SubagentHandback tool
+    # call, so its newest tool call is that one. Resuming the agent appends new
+    # tool calls after it, which brings the row back.
+    last_tool=$(tac "$jsonl" | grep -m1 -F '"type":"tool_use"' \
+        | jq -r '[.message.content[]? | select(.type == "tool_use") | .name] | last // ""')
+    [ "$last_tool" = SubagentHandback ] && continue
 
     # The loop is still turning only while the newest settled turn ended in a
     # tool call. Partial streaming entries carry a null stop_reason, so match on
