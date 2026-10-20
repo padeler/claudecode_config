@@ -122,11 +122,17 @@ for meta in "$SUBAGENT_DIR"/agent-*.meta.json; do
     # The settled "end_turn" entry is not always flushed before the agent exits,
     # leaving a final-answer partial as the last line. A partial that has gone
     # quiet means the agent answered and left. While a slow tool runs the last
-    # line is instead a settled tool_use entry, so waiting here costs it nothing.
-    IFS=$'\t' read -r last_type last_stop < <(
-        tail -n 1 "$jsonl" | jq -r '[.type // "", (.message.stop_reason // "")] | @tsv' 2>/dev/null
+    # line is instead a tool_use entry, so waiting here costs it nothing. Newer
+    # CLIs write a null stop_reason on every entry, so a tool call is recognised
+    # by its content rather than by a settled stop_reason.
+    # stop_reason goes last: read collapses adjacent tabs, so an empty field
+    # anywhere else would shift the ones after it.
+    IFS=$'\t' read -r last_type last_has_tool last_stop < <(
+        tail -n 1 "$jsonl" | jq -r '[.type // "",
+            ([.message.content[]? | select(.type == "tool_use")] | length > 0),
+            (.message.stop_reason // "")] | @tsv' 2>/dev/null
     )
-    if [ "$last_type" = assistant ] && [ -z "$last_stop" ] \
+    if [ "$last_type" = assistant ] && [ -z "$last_stop" ] && [ "$last_has_tool" = false ] \
        && [ "$idle" -gt "$UNFLUSHED_ANSWER_SECONDS" ]; then
         continue
     fi

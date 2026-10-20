@@ -1,8 +1,9 @@
 {
-  "model": "opus[1m]",
+  "model": "opus",
   "statusLine": {
     "type": "command",
-    "command": "~/.claude/claude_statusline.sh"
+    "command": "~/.claude/claude_statusline.sh",
+    "refreshInterval": 5
   },
   "enabledPlugins": {
     "context7@claude-plugins-official": true,
@@ -15,7 +16,7 @@
       "effortLevel": "high"
     }
   },
+  "awaySummaryEnabled": false,
   "skipDangerousModePermissionPrompt": true,
-  "inputNeededNotifEnabled": true,
-  "awaySummaryEnabled": false
+  "inputNeededNotifEnabled": true
 }
